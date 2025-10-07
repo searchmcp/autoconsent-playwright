@@ -2,7 +2,7 @@
 
 A tiny build wrapper that bundles **DuckDuckGo Autoconsent** (with all rule sets) into a **single, minified IIFE** you can inject as a **Playwright init script**. Perfect for Java/JS Playwright crawlers that want cookie banners auto-dismissed (opt-out by default) without shipping rule details to the app layer.
 
-![latest release](https://img.shields.io/github/v/release/searchmcp/autoconsent-playwright?display_name=tag)
+![latest release](https://img.shields.io/github/v/release/searchmcp/autoconsent-playwright)
 ![build](https://img.shields.io/github/actions/workflow/status/searchmcp/autoconsent-playwright/release.yml?branch=main)
 
 > **License:** MIT  
