@@ -1,0 +1,17 @@
+{
+  "name": "autoconsent-playwright",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DuckDuckGo Autoconsent bundled as a Playwright init script",
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && esbuild src/index.js --bundle --format=iife --target=es2021 --minify --legal-comments=none --outfile=dist/autoconsent.playwright.js"
+  },
+  "dependencies": {
+    "@duckduckgo/autoconsent": "^14.30.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

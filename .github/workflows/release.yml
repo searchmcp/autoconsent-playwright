@@ -1,0 +1,104 @@
+name: release
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: { }
+
+permissions:
+  contents: write
+
+jobs:
+  build_and_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install
+        run: npm install
+
+      - name: Detect context (release marker / CI commit)
+        id: detect
+        run: |
+          MSG="$(git log -1 --pretty=%B | tr -d '\r')"
+          AUTHOR="$(git log -1 --pretty=%an)"
+          echo "msg=$MSG"
+          echo "author=$AUTHOR"
+          if echo "$MSG" | grep -q "\[release\]"; then
+            echo "is_release=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_release=false" >> $GITHUB_OUTPUT
+          fi
+          if [ "$AUTHOR" = "github-actions[bot]" ]; then
+            echo "is_ci_commit=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_ci_commit=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build
+        run: npm run build
+
+      - name: Bump version (minor) with release marker
+        if: steps.detect.outputs.is_release == 'true'
+        id: bump_release
+        run: |
+          NEW_VER=$(npm version minor -m "chore(release): v%s [release]" | sed 's/^v//')
+          echo "new_ver=$NEW_VER" >> $GITHUB_OUTPUT
+
+      - name: Update README with current version/date
+        if: steps.detect.outputs.is_release == 'true'
+        run: |
+          DATE_ISO=$(date -u +"%Y-%m-%d")
+          VER="${{ steps.bump_release.outputs.new_ver }}"
+          perl -0777 -pe "s/<!--LAST_RELEASE-->.*?<!--\/LAST_RELEASE-->/<!--LAST_RELEASE-->v$VER on $DATE_ISO<!--\/LAST_RELEASE-->/s" -i README.md
+          git add README.md
+          git commit --amend --no-edit
+
+      - name: Move tag to amended commit
+        if: steps.detect.outputs.is_release == 'true'
+        run: |
+          VER="${{ steps.bump_release.outputs.new_ver }}"
+          git tag -f "v$VER"
+
+      - name: Rebuild after version bump
+        if: steps.detect.outputs.is_release == 'true'
+        run: npm run build
+
+      - name: Push branch and tags (release)
+        if: steps.detect.outputs.is_release == 'true'
+        run: |
+          git push origin HEAD:main
+          VER="${{ steps.bump_release.outputs.new_ver }}"
+          git push -f origin "v$VER"
+
+      - name: Create GitHub Release
+        if: steps.detect.outputs.is_release == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.bump_release.outputs.new_ver }}
+          name: v${{ steps.bump_release.outputs.new_ver }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/autoconsent.playwright.js
+
+      - name: Bump version (patch) for regular commits
+        if: steps.detect.outputs.is_release == 'false' && steps.detect.outputs.is_ci_commit == 'false'
+        id: bump_build
+        run: |
+          NEW_VER=$(npm version patch -m "chore(build): v%s" | sed 's/^v//')
+          echo "new_ver=$NEW_VER" >> $GITHUB_OUTPUT
+
+      - name: Push branch (no tag)
+        if: steps.detect.outputs.is_release == 'false' && steps.detect.outputs.is_ci_commit == 'false'
+        run: |
+          git push origin HEAD:main
