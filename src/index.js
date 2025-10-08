@@ -35,6 +35,10 @@ const send = (msg) => {
             console.log(`Autoconsent finished running with type: ${t}`)
             globalThis.acDone = true;
             clearTimeout(failSafe);
+        } else if (t === "report" && msg.state && msg.state.lifecycle === "nothingDetected") {
+            console.log(`Autoconsent did not find anything`);
+            globalThis.acDone = true;
+            clearTimeout(failSafe);
         }
     }
     return Promise.resolve();
