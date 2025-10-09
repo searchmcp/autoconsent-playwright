@@ -18,7 +18,7 @@ const cfg = {
     enablePrehide: false,
     enableGeneratedRules: true,
     enableHeuristicDetection: true,
-    detectRetries: 20,
+    detectRetries: 0, // Waiting for resolution of this issue: https://github.com/duckduckgo/autoconsent/issues/1034
     isMainWorld: false,
     enableFilterList: true,
     ...(globalThis.__AUTOCONSENT_CONFIG ?? {})
@@ -32,11 +32,11 @@ const send = (msg) => {
     if (msg && typeof msg === "object") {
         const t = msg.type;
         if (t === "autoconsentDone" || t === "optOutResult" || t === "optInResult" || t === "autoconsentError") {
-            console.log(`Autoconsent finished running with type: ${t}`)
+            console.debug(`Autoconsent finished running with type: ${t}`)
             globalThis.acDone = true;
             clearTimeout(failSafe);
         } else if (t === "report" && msg.state && msg.state.lifecycle === "nothingDetected") {
-            console.log(`Autoconsent did not find anything`);
+            console.debug(`Autoconsent did not find anything`);
             globalThis.acDone = true;
             clearTimeout(failSafe);
         }
