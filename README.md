@@ -109,7 +109,7 @@ This repo ships a **GitHub Actions** workflow (`.github/workflows/release.yml`) 
 
 Trigger it from the **Actions** tab (workflow_dispatch).
 
-**Last release:** <!--LAST_RELEASE-->v1.14.0 on 2026-09-01<!--/LAST_RELEASE-->
+**Last release:** <!--LAST_RELEASE-->v1.15.0 on 2026-10-01<!--/LAST_RELEASE-->
 
 ---
 
